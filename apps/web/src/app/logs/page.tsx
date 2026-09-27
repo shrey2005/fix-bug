@@ -32,7 +32,8 @@ export default function LogsPage() {
     },
   });
 
-  const logs = logsQuery.data?.data || [];
+  const logs = logsQuery.data?.logs || [];
+  console.log({logs})
   const meta = logsQuery.data?.meta || { page: 1, limit: 10, total: 0, pages: 1 };
 
   return (

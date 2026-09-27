@@ -17,7 +17,19 @@ export class LogsRepository {
     }
 
     if (statusCode) {
-      query = query.orWhere('status_code', statusCode);
+      const codeStr = String(statusCode);
+      if(codeStr == "2"){
+        query = query.whereBetween('status_code', [200, 299]);
+      }
+      else if(codeStr == "4"){
+        query = query.whereBetween('status_code', [400, 499]);
+      }
+      else if(codeStr == "5"){
+        query = query.whereBetween('status_code', [500, 599]);
+      }
+      else{
+        query = query.where('status_code', statusCode)
+      }
     }
 
     if (from && to) {
@@ -29,7 +41,8 @@ export class LogsRepository {
     }
 
     const total = await query.clone().count('* as count').first() as any;
-    const offset = page * limit;
+    const totalCount = parseInt(total?.count || '0', 10);
+    const offset = Math.max(0, (page -1) * limit);
 
     const logs = await query
       .orderBy('created_at', 'desc')
@@ -46,8 +59,8 @@ export class LogsRepository {
       meta: {
         page,
         limit,
-        total: total.count,
-        pages: Math.ceil(total.count / limit),
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit),
       } as PaginationMeta,
     };
   }
