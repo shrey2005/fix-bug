@@ -9,8 +9,9 @@ export class MetricsRepository {
       query = query.whereBetween('created_at', [from, to]);
     }
 
-    const countResult = await query.clone().count('*').first() as any;
-    const totalRequests = countResult.count;
+    const countResult = await query.clone().count('* as count').first() as any;
+    console.log(countResult)
+    const totalRequests = parseInt(countResult?.count || '0', 10);
 
     let failedQuery = db('api_logs');
     if (from && to) {
@@ -18,9 +19,9 @@ export class MetricsRepository {
     }
     const failedResult = await failedQuery
       .where('status_code', '>=', 400)
-      .count('*')
+      .count('* as count')
       .first() as any;
-    const failedRequests = failedResult.count;
+    const failedRequests = parseInt(failedResult?.count || '0', 10);
 
     const successRate = totalRequests > 0 
       ? Math.round((totalRequests - failedRequests) / totalRequests * 100)
@@ -31,28 +32,28 @@ export class MetricsRepository {
     if (from && to) {
       authFailuresQuery = authFailuresQuery.whereBetween('created_at', [from, to]);
     }
-    const authFailures = await authFailuresQuery.count('*').first() as any;
+    const authFailures = await authFailuresQuery.count('* as count').first() as any;
 
     let latencyQuery = db('api_logs');
     if (from && to) {
       latencyQuery = latencyQuery.whereBetween('created_at', [from, to]);
     }
     const latencyResult = await latencyQuery.avg('latency_ms').first() as any;
-    const avgResponseTime = Math.round(latencyResult.avg || 0);
+    const avgResponseTime = Math.round(parseFloat(latencyResult?.avg || '0'));
 
     let violationsQuery = db('rate_limit_violations');
     if (from && to) {
       violationsQuery = violationsQuery.whereBetween('created_at', [from, to]);
     }
-    const violations = await violationsQuery.count('*').first() as any;
+    const violations = await violationsQuery.count('* as count').first() as any;
 
     return {
       total_requests: totalRequests,
       failed_requests: failedRequests,
       success_rate: successRate,
-      auth_failures: authFailures.count,
+      auth_failures: parseInt(authFailures?.count || '0', 10),
       avg_response_time: avgResponseTime,
-      rate_limit_violations: violations.count,
+      rate_limit_violations: parseInt(violations?.count || '0', 10)
     };
   }
 
