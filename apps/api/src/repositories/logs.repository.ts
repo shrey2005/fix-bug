@@ -33,7 +33,20 @@ export class LogsRepository {
     }
 
     if (from && to) {
-      query = query.whereBetween('api_logs.created_at', [from, to]);
+      let fromDate = from;
+      let toDate = to;
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(from)) {
+        fromDate = `${from} 00:00:00`;
+      }
+      if (/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+        toDate = `${to} 23:59:59.999`;
+      } else if (from === to || to.endsWith('T00:00:00.000Z')) {
+        const d = new Date(to);
+        d.setUTCHours(23, 59, 59, 999);
+        toDate = d.toISOString();
+      }
+      query = query.whereBetween('api_logs.created_at', [fromDate, toDate]);
     }
 
     if (search) {
