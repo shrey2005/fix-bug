@@ -10,7 +10,7 @@ export class AuthRepository {
     }
     const successResult = await successQuery.count('*').first() as any;
 
-    let failureQuery = db('auth_events').where('event_type', 'login_failure');
+    let failureQuery = db('auth_events').where('event_type', ['login_failure', 'failed_login']);
     if (from && to) {
       failureQuery = failureQuery.whereBetween('created_at', [from, to]);
     }
@@ -29,10 +29,10 @@ export class AuthRepository {
     const expiredResult = await expiredQuery.count('*').first() as any;
 
     return {
-      successful_logins: successResult.count,
-      failed_logins: failureResult.count,
-      token_invalid: invalidResult.count,
-      token_expired: expiredResult.count,
+      successful_logins: parseInt(successResult?.count || '0', 10),
+      failed_logins: parseInt(failureResult?.count || '0', 10),
+      token_invalid: parseInt(invalidResult?.count || '0', 10),
+      token_expired: parseInt(expiredResult?.count || '0', 10),
     };
   }
 
@@ -42,7 +42,7 @@ export class AuthRepository {
   }> {
     const offset = (page - 1) * limit;
     const total = await db('auth_events').count('*').first() as any;
-    
+
     const events = await db('auth_events')
       .orderBy('created_at', 'desc')
       .limit(limit)
