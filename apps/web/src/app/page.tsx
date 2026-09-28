@@ -20,9 +20,11 @@ export default function Dashboard() {
   const [dateRange, setDateRange] = useState({ from: fromDefault, to: toDefault });
 
   const summaryQuery = useQuery({
-    queryKey: ['metrics', 'summary'],
+    queryKey: ['metrics', 'summary', dateRange.from, dateRange.to],
     queryFn: async () => {
-      const response = await api.get('/metrics/summary');
+      const response = await api.get('/metrics/summary', {
+        params: { from: dateRange.from, to: dateRange.to },
+      });
       return response.data.data;
     },
   });
